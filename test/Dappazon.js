@@ -15,11 +15,11 @@ const STOCK = 5
 
 describe("Dappazon", () => {
   let dappazon
-  let deployer, buyer
+  let deployer, buyer, attacker
 
   beforeEach(async () => {
     // Setup Accounts
-    [deployer, buyer] = await ethers.getSigners()
+    [deployer, buyer, attacker] = await ethers.getSigners()
 
     // Deploy contract
     const Dappazon = await ethers.getContractFactory("Dappazon")
@@ -35,34 +35,42 @@ describe("Dappazon", () => {
   describe("Listing", () => {
     let transaction
 
-    beforeEach(async () => {
-      transaction = await dappazon.connect(deployer).list(
-        ID,
-        NAME,
-        CATEGORY,
-        IMAGE,
-        COST,
-        RATING,
-        STOCK
-      )
+    describe('Success', () => {
+      beforeEach(async () => {
+        transaction = await dappazon.connect(deployer).list(
+          ID,
+          NAME,
+          CATEGORY,
+          IMAGE,
+          COST,
+          RATING,
+          STOCK
+        )
 
-      await transaction.wait()
-    })  
+        await transaction.wait()
+      })  
 
-    it("Returns item attributes", async () => {
-      const item = await dappazon.items(ID)
-      
-      expect(item.id).to.equal(ID)
-      expect(item.name).to.equal(NAME)
-      expect(item.category).to.equal(CATEGORY)
-      expect(item.image).to.equal(IMAGE)
-      expect(item.cost).to.equal(COST)
-      expect(item.rating).to.equal(RATING)
-      expect(item.stock).to.equal(STOCK)
+      it("Returns item attributes", async () => {
+        const item = await dappazon.items(ID)
+        
+        expect(item.id).to.equal(ID)
+        expect(item.name).to.equal(NAME)
+        expect(item.category).to.equal(CATEGORY)
+        expect(item.image).to.equal(IMAGE)
+        expect(item.cost).to.equal(COST)
+        expect(item.rating).to.equal(RATING)
+        expect(item.stock).to.equal(STOCK)
+      })
+
+      it("Emits List event", () => {
+        expect(transaction).to.emit(dappazon, "List")
+      })
     })
+  })
 
-    it("Emits List event", () => {
-      expect(transaction).to.emit(dappazon, "List")
+  describe('Failure', () => {
+    it('rejects non-owner from listing', async () => {       
+      await expect(dappazon.connect(attacker).list(ID, NAME, CATEGORY, IMAGE, COST, RATING, STOCK)).to.be.reverted
     })
   })
 

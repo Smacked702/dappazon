@@ -46,7 +46,7 @@ contract Dappazon {
 		uint256 _stock
 	) public onlyOwner {
 
-		// Create Item stuct
+		// Create Item struct
 		Item memory item = Item(
 			_id, 
 			_name, 
